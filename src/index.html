@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Webcamtools</title>
+</head>
+<body>
+    <video id="webcam" autoplay></video>
+    <button type="button" id="takephoto">拍照</button>
+    <button type="button" id="changecam">換相機</button>
+    <img id="takePhotoCanvas"></img>
+    <script defer>
+        window.WebCamTools = WebCamTools;
+
+
+        var a = new window.WebCamTools("#webcam");
+
+
+        document.querySelector('#takephoto').addEventListener('click', function() {
+            a.takeSnap("http://localhost:8080/")
+        });
+
+        document.querySelector('#changecam').addEventListener('click', function() {
+            a.getCameras().then(function (cameras) {
+                a.setCamera(cameras);
+            }).catch(function (e) {
+                console.error(e);
+            });
+        });
+
+        
+    </script>
+</body>
+</html>
