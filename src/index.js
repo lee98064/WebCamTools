@@ -4,67 +4,69 @@ const Swal = require('sweetalert2');
 
 class WebCamTools {
 
-    constructor(ele){
+    constructor(ele) {
         this.ele = document.getElementById(ele) || document.querySelector(ele);
         this.imageCapture;
     }
 
-    start(camid){
+    start(camid) {
         if (navigator.mediaDevices.getUserMedia) {
             var video = this.ele;
-            navigator.mediaDevices.getUserMedia({ 
-                video: {
-                    deviceId: camid
-                }
-            })
-            .then((stream) => {
-                video.srcObject = stream;
-                const track = stream.getVideoTracks()[0];
-                this.imageCapture = new ImageCapture(track);
-            })
-            .catch(function (err) {
-                Swal.fire({
-                    title: 'Error!',
-                    text: err,
-                    icon: 'error',
-                    confirmButtonText: 'Close'
+            navigator.mediaDevices.getUserMedia({
+                    video: {
+                        deviceId: camid
+                    }
                 })
-            });
+                .then((stream) => {
+                    video.srcObject = stream;
+                    const track = stream.getVideoTracks()[0];
+                    this.imageCapture = new ImageCapture(track);
+                })
+                .catch(function (err) {
+                    Swal.fire({
+                        title: 'Error!',
+                        text: err,
+                        icon: 'error',
+                        confirmButtonText: 'Close'
+                    })
+                });
         }
     }
 
     async getCameras() {
         let devices = await navigator.mediaDevices.enumerateDevices();
         var camlist = [];
-        devices.forEach(function(device) {
-            if (device.kind == 'videoinput'){
+        devices.forEach(function (device) {
+            if (device.kind == 'videoinput') {
                 camlist[device.deviceId] = device.label
             }
         });
         return camlist;
     }
 
-    async setCamera(cameras){
-        const { value: camera } = await Swal.fire({
+    async setCamera(cameras) {
+        const {
+            value: camera
+        } = await Swal.fire({
             title: 'Choose a Camera',
             input: 'select',
             inputOptions: cameras,
             inputPlaceholder: 'Choose a Camera....',
             showCancelButton: true,
             inputValidator: (value) => {
-              return new Promise((resolve) => {
-                if (value === '') {
-                    resolve('Please choose a camera.')
-                } else {
-                    resolve()
-                }
-              })
+                return new Promise((resolve) => {
+                    if (value === '') {
+                        resolve('Please choose a camera.')
+                    } else {
+                        resolve()
+                    }
+                })
             }
         })
 
-        if (camera){
+        if (camera) {
             a.start(camera);
-        }else{
+        } else {
             Swal.fire({
                 title: 'Warning!',
                 text: 'Not select a camera!',
@@ -92,50 +94,61 @@ class WebCamTools {
     //         x, y, img.width * ratio, img.height * ratio);
     // }
 
-    takeSnap(uploadlink){
+    takeSnap(uploadlink) {
         // var canvas = document.createElement('canvas');
         // var context = canvas.getContext('2d');
         this.imageCapture.takePhoto()
-        .then(blob => {
-            // var img = document.querySelector("#takePhotoCanvas");
-            var src = URL.createObjectURL(blob);
-            Swal.fire({
-                title: "Picture",
-                html:  "<img id='preview_img' src='" + src + "' style='width:100%;'>",
-                showCancelButton: true,
-                showDenyButton: true,
-                confirmButtonText: `Save`,
-                denyButtonText: `Upload`,
-            }).then((result) => {
-                if (result.isConfirmed) {
-                    var link = document.createElement("a");
+            .then(blob => {
+                // var img = document.querySelector("#takePhotoCanvas");
+                var src = URL.createObjectURL(blob);
+                Swal.fire({
+                    title: "Picture",
+                    html: "<img id='preview_img' src='" + src + "' style='width:100%;'>" +
+                        '<input type="text" id="preview_filename" style="width: 90%;font-size: 18px;padding: 15px;margin-top: 10px" placeholder="請輸入檔名">' +
+                        '<input type="text" id="preview_filedesc" style="width: 90%;font-size: 18px;padding: 15px;margin-top: 10px" placeholder="請輸入描述">',
+                    // "<input type='text' id='preview_desc'>",
+                    showCancelButton: true,
+                    showDenyButton: true,
+                    confirmButtonText: `Save`,
+                    denyButtonText: `Upload`,
+                }).then((result) => {
+                    if (result.isConfirmed) {
+                        var link = document.createElement("a");
+                        var filename = document.getElementById("preview_filename").value;
+                        document.body.appendChild(link);
 
-                    document.body.appendChild(link); 
-            
-                    link.setAttribute("href", src);
-                    link.setAttribute("download", 'Photo' + Date.now());
-                    link.click();
-                    link.remove();
-                }else if (result.isDenied) {
-                    var imagefile = this.getDataURL(document.querySelector("#preview_img"));
-                    imagefile = imagefile.replace("data:image/jpeg;base64,", "");
-                    var oXHR = new XMLHttpRequest();
-                    oXHR.open('POST',uploadlink,true);
-                    oXHR.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
-                    oXHR.send(JSON.stringify({
-                        imageData: imagefile
-                    }));
-                }
+                        link.setAttribute("href", src);
+                        if (filename != "" && filename != " ") {
+                            link.setAttribute("download", filename);
+                        } else {
+                            link.setAttribute("download", 'Photo' + Date.now());
+                        }
+                        link.click();
+                        link.remove();
+                    } else if (result.isDenied) {
+                        var imagefile = this.getDataURL(document.querySelector("#preview_img"));
+                        var filename = document.getElementById("preview_filename").value;
+                        var filedesc = document.getElementById("preview_filedesc").value;
+                        imagefile = imagefile.replace("data:image/jpeg;base64,", "");
+                        var oXHR = new XMLHttpRequest();
+                        oXHR.open('POST', uploadlink, true);
+                        oXHR.setRequestHeader("Content-Type", "application/json;charset=UTF-8");
+                        oXHR.send(JSON.stringify({
+                            filename: filename,
+                            filedesc: filedesc,
+                            imageData: imagefile
+                        }));
+                    }
+                })
             })
-        })
-        .catch(err => {
-            Swal.fire({
-                title: 'Error!',
-                text: err,
-                icon: 'error',
-                confirmButtonText: 'Close'
-            })
-        });
+            .catch(err => {
+                Swal.fire({
+                    title: 'Error!',
+                    text: err,
+                    icon: 'error',
+                    confirmButtonText: 'Close'
+                })
+            });
     }
 
     getDataURL(img) {
@@ -148,7 +161,7 @@ class WebCamTools {
         // Draw the image
         ctx.drawImage(img, 0, 0);
         return canvas.toDataURL('image/jpeg');
-     }
+    }
 
 }
 
@@ -169,4 +182,3 @@ window.WebCamTools = WebCamTools;
 //         console.error(e);
 //     });
 // });
-

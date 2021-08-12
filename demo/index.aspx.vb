@@ -1,18 +1,7 @@
 ﻿Imports System.Web.Services
 Imports System.IO
-Imports System.Data.SqlClient
-Imports System.Data
-Partial Class Upload
+Partial Class index
     Inherits System.Web.UI.Page
-    ' 因為js限制不能使用webform方式上傳，需使用ajax，那回傳過來的是一個json字串，asp會自動將變數對應進imageData
-    ' 這部分已經整合進js，所以只需處理asp部分就好
-    '回傳樣式:
-    ' {
-    '     imageData: "BASE64編碼"
-    ' }
-    '參考網址:https://www.aspforums.net/Threads/102983/Pass-Send-Image-data-as-BASE64-string-using-jQuery-AJAX-in-ASPNet/
-
-    '此句必加，防止引發CSRF或相關登入驗證錯誤
 
     <WebMethod(EnableSession:=True)>
     Public Shared Sub MoveImages(ByVal filename As String, ByVal filedesc As String, ByVal imageData As String)
@@ -35,5 +24,4 @@ Partial Class Upload
             End Using
         End Using
     End Sub
-
 End Class
